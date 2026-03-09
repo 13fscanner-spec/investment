@@ -3,7 +3,7 @@
 import { getPortfolio, savePortfolio, addHolding, removeHolding, exportPortfolio, importPortfolio, syncWithServer } from './storage.js';
 import { showToast } from './dashboard.js';
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = window.location.origin;
 let searchTimeout = null;
 
 export async function initPortfolio() {

@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "vite public",
-    "server": "node server.js"
+    "server": "node server.js",
+    "start": "node server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

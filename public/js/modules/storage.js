@@ -15,7 +15,7 @@ export function getPortfolio() {
 export async function savePortfolio(holdings) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
   try {
-    await fetch('http://localhost:3001/api/portfolio', {
+    await fetch('/api/portfolio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(holdings)
@@ -27,7 +27,7 @@ export async function savePortfolio(holdings) {
 
 export async function syncWithServer() {
   try {
-    const res = await fetch('http://localhost:3001/api/portfolio');
+    const res = await fetch('/api/portfolio');
     if (res.ok) {
       const serverData = await res.json();
       if (Array.isArray(serverData)) {
