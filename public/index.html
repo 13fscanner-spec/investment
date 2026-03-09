@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InvestAI — Análisis de Mercado con IA</title>
+  <meta name="description" content="Plataforma de análisis de inversiones para BYMA potenciada por inteligencia artificial. Recomendaciones diarias, gestión de portafolio y análisis de mercado en tiempo real.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <path d="M4 20L10 12L16 16L24 6" stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18 6H24V12" stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs><linearGradient id="g1" x1="4" y1="6" x2="24" y2="20"><stop stop-color="#a78bfa"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs>
+        </svg>
+      </div>
+      <span class="brand-name">InvestAI</span>
+    </div>
+
+    <div class="sidebar-nav">
+      <button class="nav-item active" data-panel="dashboard" id="nav-dashboard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-panel="portfolio" id="nav-portfolio">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4h-4z"/></svg>
+        <span>Portafolio</span>
+      </button>
+      <button class="nav-item" data-panel="calculator" id="nav-calculator">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+        <span>Calculadora</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="market-status" id="market-status">
+        <span class="status-dot"></span>
+        <span class="status-text">Conectando...</span>
+      </div>
+      <div class="last-update" id="last-update">—</div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content" id="main-content">
+    <!-- Dashboard Panel -->
+    <section class="panel active" id="panel-dashboard">
+      <div class="panel-header">
+        <div>
+          <h1>Dashboard de Mercado</h1>
+          <p class="panel-subtitle" id="dashboard-date"></p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost" id="btn-refresh" title="Forzar actualización">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            <span>Actualizar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Market Indices -->
+      <div class="indices-bar" id="indices-bar">
+        <div class="index-skeleton"></div>
+        <div class="index-skeleton"></div>
+        <div class="index-skeleton"></div>
+        <div class="index-skeleton"></div>
+      </div>
+
+      <!-- Main Grid -->
+      <div class="dashboard-grid">
+        <!-- AI Analysis -->
+        <div class="card card-analysis" id="card-analysis">
+          <div class="card-header">
+            <h2>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4c0 1.1-.9 2-2 2h-4a2 2 0 01-2-2 4 4 0 014-4z"/><path d="M8.5 8a6.5 6.5 0 100 13h7a6.5 6.5 0 000-13"/><path d="M12 12v4"/><path d="M10 16h4"/></svg>
+              Análisis IA del Mercado
+            </h2>
+            <div class="card-header-actions" style="display: flex; gap: 8px; align-items: center;">
+              <select id="risk-profile-select" class="form-select" style="padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 0.8rem; outline: none; cursor: pointer;">
+                <option value="conservador">Conservador</option>
+                <option value="moderado" selected>Moderado</option>
+                <option value="agresivo">Agresivo</option>
+              </select>
+              <select id="ai-provider-select" class="form-select" style="padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 0.8rem; outline: none; cursor: pointer;">
+                <option value="gemini">Gemini</option>
+                <option value="openai">OpenAI</option>
+                <option value="consensus">Consenso (Gemini + OpenAI)</option>
+              </select>
+              <button class="btn-icon btn-ai-refresh" id="btn-ai-refresh" title="Re-ejecutar análisis con IA">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+              </button>
+              <span class="badge badge-ai" id="badge-ai-provider">Gemini AI</span>
+            </div>
+          </div>
+          <div class="card-body" id="analysis-content">
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Generando análisis con IA...</p>
+              <p class="loading-hint">Esto puede tomar 15-30 segundos</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top 5 Buy -->
+        <div class="card card-recommendations" id="card-buy">
+          <div class="card-header">
+            <h2>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              Top 5 — Comprar Hoy
+            </h2>
+            <span class="badge badge-buy">COMPRA</span>
+          </div>
+          <div class="card-body" id="buy-content">
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Analizando oportunidades...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sell Recommendations -->
+        <div class="card card-sell" id="card-sell">
+          <div class="card-header">
+            <h2>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+              Recomendaciones de Venta
+            </h2>
+            <span class="badge badge-sell">VENTA</span>
+          </div>
+          <div class="card-body" id="sell-content">
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Evaluando portafolio...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- News Feed -->
+        <div class="card card-news" id="card-news">
+          <div class="card-header">
+            <h2>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><line x1="10" y1="6" x2="18" y2="6"/><line x1="10" y1="10" x2="18" y2="10"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+              Noticias del Mercado
+            </h2>
+          </div>
+          <div class="card-body news-scroll" id="news-content">
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Cargando noticias...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Portfolio Panel -->
+    <section class="panel" id="panel-portfolio">
+      <div class="panel-header">
+        <div>
+          <h1>Mi Portafolio</h1>
+          <p class="panel-subtitle">Gestioná tus activos y hacé seguimiento de tu rendimiento</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary" id="btn-add-holding">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Agregar Activo</span>
+          </button>
+          <button class="btn btn-ghost" id="btn-export">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Exportar</span>
+          </button>
+          <button class="btn btn-ghost" id="btn-import">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Importar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Portfolio Summary Cards -->
+      <div class="portfolio-summary" id="portfolio-summary">
+        <div class="summary-card">
+          <span class="summary-label">Valor Total</span>
+          <span class="summary-value" id="total-value">$0.00</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Costo Total</span>
+          <span class="summary-value" id="total-cost">$0.00</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Ganancia/Pérdida</span>
+          <span class="summary-value" id="total-pnl">$0.00</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Rendimiento</span>
+          <span class="summary-value" id="total-return">0.00%</span>
+        </div>
+      </div>
+
+      <!-- Portfolio Chart -->
+      <div class="portfolio-chart-row">
+        <div class="card" id="card-allocation">
+          <div class="card-header"><h2>Distribución del Portafolio</h2></div>
+          <div class="card-body chart-container">
+            <canvas id="allocation-chart" width="300" height="300"></canvas>
+            <div class="chart-legend" id="chart-legend"></div>
+          </div>
+        </div>
+        <div class="card" id="card-holdings-table">
+          <div class="card-header"><h2>Mis Activos</h2></div>
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table class="holdings-table" id="holdings-table">
+                <thead>
+                  <tr>
+                    <th>Ticker</th>
+                    <th>Cantidad</th>
+                    <th>P. Compra (ARS)</th>
+                <th>Var. %</th>
+                <th>P. Actual (ARS)</th>
+                    <th>Valor</th>
+                    <th>P&L</th>
+                    <th>%</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="holdings-body">
+                  <tr><td colspan="8" class="empty-state">No hay activos cargados. Agregá tu primer activo.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Holding Modal -->
+      <div class="modal-overlay" id="modal-add-holding">
+        <div class="modal">
+          <div class="modal-header">
+            <h3 id="modal-title">Agregar Activo</h3>
+            <button class="modal-close" id="modal-close">&times;</button>
+          </div>
+          <form id="form-add-holding">
+            <div class="form-group">
+              <label for="input-ticker">Ticker</label>
+              <input type="text" id="input-ticker" placeholder="Ej: GGAL, AAPL, YPF..." required autocomplete="off">
+              <div class="search-results" id="ticker-search-results"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="input-shares">Cantidad</label>
+                <input type="number" id="input-shares" placeholder="100" step="any" min="0.01" required>
+              </div>
+              <div class="form-group">
+                <label for="input-price">Precio de Compra (ARS)</label>
+                <input type="number" id="input-price" placeholder="15000.00" step="any" min="0.01" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="input-date">Fecha de Compra</label>
+                <input type="date" id="input-date" required>
+              </div>
+              <div class="form-group">
+                <label for="input-commission">Comisión (USD)</label>
+                <input type="number" id="input-commission" placeholder="0.00" step="any" min="0" value="0">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-ghost" id="btn-cancel-add">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Import Modal -->
+      <div class="modal-overlay" id="modal-import">
+        <div class="modal">
+          <div class="modal-header">
+            <h3>Importar Portafolio</h3>
+            <button class="modal-close" id="modal-import-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p>Pegá el JSON de tu portafolio exportado previamente:</p>
+            <textarea id="import-textarea" rows="8" placeholder='[{"ticker":"AAPL","shares":10,"avgPrice":150,...}]'></textarea>
+            <div class="form-actions">
+              <button class="btn btn-ghost" id="btn-cancel-import">Cancelar</button>
+              <button class="btn btn-primary" id="btn-confirm-import">Importar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calculator Panel -->
+    <section class="panel" id="panel-calculator">
+      <div class="panel-header">
+        <div>
+          <h1>Calculadora de Precio Promedio</h1>
+          <p class="panel-subtitle">Calculá el precio promedio ponderado de tus compras y compará con el precio actual</p>
+        </div>
+      </div>
+
+      <div class="calculator-layout">
+        <div class="card">
+          <div class="card-header">
+            <h2>Agregar Compras</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="calc-ticker">Ticker</label>
+              <input type="text" id="calc-ticker" placeholder="Ej: GGAL" autocomplete="off">
+            </div>
+            <div id="calc-transactions">
+              <div class="calc-transaction-row" data-index="0">
+                <div class="form-group">
+                  <label>Precio</label>
+                  <input type="number" class="calc-price" placeholder="150.00" step="any" min="0.01">
+                </div>
+                <div class="form-group">
+                  <label>Cantidad</label>
+                  <input type="number" class="calc-qty" placeholder="100" step="any" min="0.01">
+                </div>
+                <div class="form-group">
+                  <label>Comisión</label>
+                  <input type="number" class="calc-comm" placeholder="0" step="any" min="0" value="0">
+                </div>
+              </div>
+            </div>
+            <div class="calc-actions">
+              <button class="btn btn-ghost" id="btn-add-transaction">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Agregar otra compra
+              </button>
+              <button class="btn btn-primary" id="btn-calculate">Calcular</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="calc-results-card" style="display:none;">
+          <div class="card-header">
+            <h2>Resultado</h2>
+          </div>
+          <div class="card-body" id="calc-results"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer" id="disclaimer">
+    <p>⚠️ <strong>Disclaimer</strong>: Las recomendaciones generadas por IA no constituyen asesoramiento financiero profesional. Operá bajo tu propio criterio y riesgo. Consultá siempre con un asesor financiero autorizado.</p>
+    <button class="btn btn-ghost btn-sm" id="btn-dismiss-disclaimer">Entendido</button>
+  </div>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
