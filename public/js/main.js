@@ -27,6 +27,18 @@ function initNavigation() {
       }
     });
   });
+
+  const logoutBtn = document.getElementById('nav-logout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.href = '/login.html';
+      } catch (e) {
+        console.error('Logout error', e);
+      }
+    });
+  }
 }
 
 // ── Disclaimer ──

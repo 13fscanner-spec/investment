@@ -9,6 +9,10 @@ const API_BASE = (window.location.hostname === 'localhost' || window.location.ho
 // ── Fetch helpers ──
 async function fetchJSON(url, options = {}) {
   const res = await fetch(`${API_BASE}${url}`, options);
+  if (res.status === 401) {
+    window.location.href = '/login.html';
+    throw new Error('No autorizado');
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || 'Error de red');

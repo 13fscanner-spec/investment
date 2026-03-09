@@ -6,6 +6,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import jwt from 'jsonwebtoken';
+import cookieParser from 'cookie-parser';
 
 // Load .env manually (avoid extra dependency issues)
 const __filename = fileURLToPath(import.meta.url);
@@ -22,27 +24,68 @@ if (existsSync(envPath)) {
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
-// ---------- BASIC AUTH ----------
+// ---------- CUSTOM JWT AUTH ----------
 const AUTH_USER = process.env.AUTH_USER;
 const AUTH_PASS = process.env.AUTH_PASS;
+const JWT_SECRET = process.env.JWT_SECRET || 'investai-super-secret-key-9988'; // fallback for local dev
 
+// Login endpoint
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (AUTH_USER && AUTH_PASS && username === AUTH_USER && password === AUTH_PASS) {
+    const token = jwt.sign({ user: username }, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('invest_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'strict'
+    });
+    return res.json({ ok: true });
+  }
+  return res.status(401).json({ error: 'Credenciales inválidas' });
+});
+
+// Logout endpoint
+app.post('/api/logout', (req, res) => {
+  res.clearCookie('invest_token');
+  res.json({ ok: true });
+});
+
+// Protect routes middleware
 if (AUTH_USER && AUTH_PASS) {
   app.use((req, res, next) => {
-    const auth = { login: AUTH_USER, password: AUTH_PASS };
-    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-    const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
-
-    if (login && password && login === auth.login && password === auth.password) {
+    // Excluir rutas públicas estáticas necesarias para el login
+    if (req.path === '/login.html' || req.path === '/js/login.js' || req.path.startsWith('/css/')) {
       return next();
     }
+    
+    const token = req.cookies.invest_token;
+    if (!token) {
+      // Si pide HTML, redirigir. Si pide API, devolver 401
+      if (req.accepts('html') && !req.path.startsWith('/api/')) {
+        return res.redirect('/login.html');
+      }
+      return res.status(401).json({ error: 'No autorizado' });
+    }
 
-    res.set('WWW-Authenticate', 'Basic realm="InvestAI"');
-    res.status(401).send('Authentication required.');
+    try {
+      req.user = jwt.verify(token, JWT_SECRET);
+      
+      // Si ya está logueado y pide la raíz pero el login no redirigió bien, continúa.
+      next();
+    } catch (err) {
+      if (req.accepts('html') && !req.path.startsWith('/api/')) {
+        return res.redirect('/login.html');
+      }
+      return res.status(401).json({ error: 'Token inválido o expirado' });
+    }
   });
 }
 // -------------------------------
 
+// Serve static ONLY IF authenticated (handled by middleware above)
 app.use(express.static(join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3001;
