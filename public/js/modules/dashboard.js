@@ -2,7 +2,9 @@
 
 import { getPortfolio, getCachedAnalysis, setCachedAnalysis } from './storage.js';
 
-const API_BASE = window.location.origin;
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '3001' 
+  ? 'http://localhost:3001' 
+  : '';
 
 // ── Fetch helpers ──
 async function fetchJSON(url, options = {}) {

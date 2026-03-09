@@ -2,6 +2,9 @@
 
 const STORAGE_KEY = 'investai_portfolio';
 const ANALYSIS_CACHE_KEY = 'investai_analysis_cache';
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '3001' 
+  ? 'http://localhost:3001' 
+  : '';
 
 export function getPortfolio() {
   try {
@@ -15,7 +18,7 @@ export function getPortfolio() {
 export async function savePortfolio(holdings) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
   try {
-    await fetch('/api/portfolio', {
+    const res = await fetch(`${API_BASE}/api/portfolio`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(holdings)
@@ -27,7 +30,7 @@ export async function savePortfolio(holdings) {
 
 export async function syncWithServer() {
   try {
-    const res = await fetch('/api/portfolio');
+    const res = await fetch(`${API_BASE}/api/portfolio`);
     if (res.ok) {
       const serverData = await res.json();
       if (Array.isArray(serverData)) {
