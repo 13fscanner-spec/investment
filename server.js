@@ -446,13 +446,29 @@ app.post('/api/refresh', (req, res) => {
 app.get('/api/cedears', async (req, res) => {
   try {
     const response = await fetch('https://data912.com/live/arg_cedears');
-    if (!response.ok) throw new Error(`Data912 error: ${response.status}`);
+    if (!response.ok) {
+        console.error(`Data912 returned ${response.status}`);
+        return res.status(response.status).json({ error: 'Source error' });
+    }
     const data = await response.json();
     res.json(data);
   } catch (err) {
-    console.error('Error fetching data912:', err);
-    res.status(500).json({ error: err.message });
+    console.error('Error fetching data912:', err.message);
+    res.status(500).json({ error: 'Connection failed to price source' });
   }
+});
+
+// Check API configuration status (helpful for debugging Render env vars)
+app.get('/api/status', (req, res) => {
+  res.json({
+    finnhub: !!FINNHUB_KEY,
+    gemini: !!GEMINI_KEY,
+    openai: !!OPENAI_KEY,
+    anthropic: !!ANTHROPIC_KEY,
+    portfolioFile: existsSync(PORTFOLIO_FILE),
+    nodeVersion: process.version,
+    env: process.env.NODE_ENV || 'development'
+  });
 });
 
 // ---------- START ----------
