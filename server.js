@@ -22,6 +22,27 @@ if (existsSync(envPath)) {
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// ---------- BASIC AUTH ----------
+const AUTH_USER = process.env.AUTH_USER;
+const AUTH_PASS = process.env.AUTH_PASS;
+
+if (AUTH_USER && AUTH_PASS) {
+  app.use((req, res, next) => {
+    const auth = { login: AUTH_USER, password: AUTH_PASS };
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+
+    if (login && password && login === auth.login && password === auth.password) {
+      return next();
+    }
+
+    res.set('WWW-Authenticate', 'Basic realm="InvestAI"');
+    res.status(401).send('Authentication required.');
+  });
+}
+// -------------------------------
+
 app.use(express.static(join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3001;
