@@ -186,14 +186,26 @@ function renderTable(portfolio, prices) {
 }
 
 function renderSummary(portfolio, prices) {
-  let totalValue = 0, totalCost = 0;
+  let totalValue = 0, totalCost = 0, totalPrevValue = 0;
+  
   portfolio.forEach(h => {
-    const priceData = prices[h.ticker.toUpperCase()] || { ars: 0 };
-    totalValue += priceData.ars * h.shares;
+    const priceData = prices[h.ticker.toUpperCase()] || { ars: 0, pctChange: 0 };
+    const currentPrice = priceData.ars;
+    const pctChange = priceData.pctChange || 0;
+    
+    totalValue += currentPrice * h.shares;
     totalCost += h.avgPrice * h.shares;
+    
+    // Calcular el valor del día anterior para el rendimiento diario
+    const prevPrice = currentPrice / (1 + (pctChange / 100));
+    totalPrevValue += prevPrice * h.shares;
   });
+  
   const totalPnl = totalValue - totalCost;
   const totalReturn = totalCost > 0 ? ((totalPnl / totalCost) * 100) : 0;
+  
+  const dailyPnl = totalValue - totalPrevValue;
+  const dailyReturn = totalPrevValue > 0 ? ((dailyPnl / totalPrevValue) * 100) : 0;
 
   document.getElementById('total-value').textContent = `$${totalValue.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
   document.getElementById('total-cost').textContent = `$${totalCost.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
@@ -205,6 +217,12 @@ function renderSummary(portfolio, prices) {
   const retEl = document.getElementById('total-return');
   retEl.textContent = `${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(2)}%`;
   retEl.className = `summary-value ${totalReturn >= 0 ? 'positive' : 'negative'}`;
+
+  const dailyRetEl = document.getElementById('daily-return');
+  if (dailyRetEl) {
+    dailyRetEl.textContent = `${dailyReturn >= 0 ? '+' : ''}${dailyReturn.toFixed(2)}% ($${Math.abs(dailyPnl).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})})`;
+    dailyRetEl.className = `summary-value ${dailyReturn >= 0 ? 'positive' : 'negative'}`;
+  }
 }
 
 // ── Donut Chart ──
