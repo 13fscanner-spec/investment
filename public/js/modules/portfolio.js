@@ -45,6 +45,25 @@ function bindEvents() {
   // Ticker search
   document.getElementById('input-ticker').addEventListener('input', handleTickerSearch);
 
+  // Refresh Portfolio
+  const btnRefresh = document.getElementById('btn-refresh-portfolio');
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', async () => {
+      btnRefresh.disabled = true;
+      const span = btnRefresh.querySelector('span');
+      if (span) span.textContent = 'Actualizando...';
+      try {
+        await renderPortfolio();
+        showToast('Precios actualizados', 'success');
+      } catch (err) {
+        showToast('Error al actualizar precios', 'error');
+      } finally {
+        btnRefresh.disabled = false;
+        if (span) span.textContent = 'Actualizar';
+      }
+    });
+  }
+
   // Export / Import
   document.getElementById('btn-export').addEventListener('click', handleExport);
   document.getElementById('btn-import').addEventListener('click', () => {
