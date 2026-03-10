@@ -58,11 +58,10 @@ export async function initDashboard() {
     }
   });
 
-  // Auto-refresh every 15 minutes
+  // Auto-refresh every 15 minutes (only for indices and news)
   setInterval(() => {
     loadIndices();
     loadNews();
-    loadAnalysis();
   }, 15 * 60 * 1000);
 }
 
@@ -187,6 +186,13 @@ async function loadAnalysis(force = false) {
     if (cached?.analysis && (cached.provider === undefined || cached.provider === aiProvider) && (cached.riskProfile === undefined || cached.riskProfile === riskProfile)) {
       renderAnalysis(cached.analysis);
       updateLastUpdate(cached.timestamp);
+      return;
+    } else {
+      // Prompt user for manual trigger to save API quota
+      const manualMsg = '<div class="no-data" style="text-align:center; padding: 2rem;"><p><strong>Análisis Manual Requerido</strong></p><p style="margin-top:0.5rem;font-size:0.9em;color:var(--text-secondary)">Haz clic en el botón de recargar (↻) arriba a la derecha para iniciar el análisis con IA.</p></div>';
+      analysisEl.innerHTML = manualMsg;
+      buyEl.innerHTML = manualMsg;
+      sellEl.innerHTML = manualMsg;
       return;
     }
   }
