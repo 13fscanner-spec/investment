@@ -7,6 +7,7 @@ const API_BASE = (window.location.hostname === 'localhost' || window.location.ho
   ? 'http://localhost:3001' 
   : '';
 let searchTimeout = null;
+let currentSort = { column: 'ticker', order: 'asc' };
 
 export async function initPortfolio() {
   await syncWithServer();
@@ -41,6 +42,20 @@ function bindEvents() {
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('btn-cancel-add').addEventListener('click', closeModal);
   document.getElementById('form-add-holding').addEventListener('submit', handleAddHolding);
+
+  // Table sorting
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (currentSort.column === col) {
+        currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = col;
+        currentSort.order = 'desc'; // Default to desc to see highest values first
+      }
+      renderPortfolio();
+    });
+  });
 
   // Ticker search
   document.getElementById('input-ticker').addEventListener('input', handleTickerSearch);
@@ -130,7 +145,7 @@ export async function renderPortfolio() {
 
 function renderEmptyState() {
   document.getElementById('holdings-body').innerHTML =
-    '<tr><td colspan="8" class="empty-state">No hay activos cargados. Agregá tu primer activo con el botón + de arriba.</td></tr>';
+    '<tr><td colspan="9" class="empty-state">No hay activos cargados. Agregá tu primer activo con el botón + de arriba.</td></tr>';
 }
 
 function renderTable(portfolio, prices) {
@@ -140,28 +155,64 @@ function renderTable(portfolio, prices) {
     return;
   }
 
-  tbody.innerHTML = portfolio.map(h => {
+  // Pre-calculate values for sorting
+  const enrichedPortfolio = portfolio.map(h => {
     const priceData = prices[h.ticker.toUpperCase()] || { ars: 0, pctChange: 0, direct: false };
     const currentPrice = priceData.ars;
     const value = currentPrice * h.shares;
     const cost = h.avgPrice * h.shares;
     const pnl = value - cost;
     const pnlPct = cost > 0 ? ((pnl / cost) * 100) : 0;
-    const pnlClass = pnl >= 0 ? 'positive' : 'negative';
-    const pnlSign = pnl >= 0 ? '+' : '';
+    
+    return {
+      ...h,
+      currentPrice,
+      pctChange: priceData.pctChange || 0,
+      value,
+      cost,
+      pnl,
+      pnlPct
+    };
+  });
+
+  // Apply sorting
+  enrichedPortfolio.sort((a, b) => {
+    let valA = a[currentSort.column];
+    let valB = b[currentSort.column];
+    
+    if (currentSort.column === 'ticker') {
+      return currentSort.order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    
+    return currentSort.order === 'asc' ? valA - valB : valB - valA;
+  });
+
+  // Update header UI
+  document.querySelectorAll('th.sortable').forEach(th => {
+    const icon = th.querySelector('.sort-icon');
+    if (th.dataset.sort === currentSort.column) {
+      icon.innerHTML = currentSort.order === 'asc' ? '&#9650;' : '&#9660;'; // Up/Down triangles
+    } else {
+      icon.innerHTML = '';
+    }
+  });
+
+  tbody.innerHTML = enrichedPortfolio.map(h => {
+    const pnlClass = h.pnl >= 0 ? 'positive' : 'negative';
+    const pnlSign = h.pnl >= 0 ? '+' : '';
 
     return `
       <tr>
         <td class="ticker-cell">${h.ticker}</td>
         <td>${h.shares.toLocaleString('es-AR')}</td>
         <td>$${h.avgPrice.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
-        <td class="${priceData.pctChange >= 0 ? 'positive' : 'negative'}">${priceData.pctChange >= 0 ? '+' : ''}${priceData.pctChange.toFixed(2)}%</td>
+        <td class="${h.pctChange >= 0 ? 'positive' : 'negative'}">${h.pctChange >= 0 ? '+' : ''}${h.pctChange.toFixed(2)}%</td>
         <td class="price-cell">
-          $${currentPrice.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+          $${h.currentPrice.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
         </td>
-        <td>$${value.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-        <td class="${pnlClass}">${pnlSign}$${pnl.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-        <td class="${pnlClass}">${pnlSign}${pnlPct.toFixed(2)}%</td>
+        <td>$${h.value.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td class="${pnlClass}">${pnlSign}$${h.pnl.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td class="${pnlClass}">${pnlSign}${h.pnlPct.toFixed(2)}%</td>
         <td>
           <div class="actions-cell">
             <button class="btn-icon delete" title="Eliminar" data-id="${h.id}">
