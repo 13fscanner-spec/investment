@@ -145,7 +145,7 @@ export async function renderPortfolio() {
 
 function renderEmptyState() {
   document.getElementById('holdings-body').innerHTML =
-    '<tr><td colspan="9" class="empty-state">No hay activos cargados. Agregá tu primer activo con el botón + de arriba.</td></tr>';
+    '<tr><td colspan="10" class="empty-state">No hay activos cargados. Agregá tu primer activo con el botón + de arriba.</td></tr>';
 }
 
 function renderTable(portfolio, prices) {
@@ -201,6 +201,13 @@ function renderTable(portfolio, prices) {
     const pnlClass = h.pnl >= 0 ? 'positive' : 'negative';
     const pnlSign = h.pnl >= 0 ? '+' : '';
 
+    let suggestionBadge = '<span class="suggestion-badge neutral">-</span>';
+    if (h.pnlPct >= 25) {
+      suggestionBadge = '<span class="suggestion-badge take-profit">Tomar Ganancias</span>';
+    } else if (h.pnlPct <= -15) {
+      suggestionBadge = '<span class="suggestion-badge stop-loss">Stop-Loss / Revisar</span>';
+    }
+
     return `
       <tr>
         <td class="ticker-cell">${h.ticker}</td>
@@ -213,6 +220,7 @@ function renderTable(portfolio, prices) {
         <td>$${h.value.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
         <td class="${pnlClass}">${pnlSign}$${h.pnl.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
         <td class="${pnlClass}">${pnlSign}${h.pnlPct.toFixed(2)}%</td>
+        <td>${suggestionBadge}</td>
         <td>
           <div class="actions-cell">
             <button class="btn-icon delete" title="Eliminar" data-id="${h.id}">

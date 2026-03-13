@@ -1149,6 +1149,37 @@ form { padding: 20px 24px; }
   background-clip: text;
 }
 
+/* ═══════════════ SUGGESTION BADGES ═══════════════ */
+.suggestion-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.suggestion-badge.take-profit {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  box-shadow: var(--shadow-glow-green);
+}
+
+.suggestion-badge.stop-loss {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--accent-red);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  box-shadow: var(--shadow-glow-red);
+}
+
+.suggestion-badge.neutral {
+  background: transparent;
+  color: var(--text-tertiary);
+}
+
 /* ═══════════════ TOAST ═══════════════ */
 .toast-container {
   position: fixed;
