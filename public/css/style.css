@@ -1149,6 +1149,37 @@ form { padding: 20px 24px; }
   background-clip: text;
 }
 
+/* ═══════════════ PORTFOLIO TABS ═══════════════ */
+.portfolio-view-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.portfolio-view-tabs .tab-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.portfolio-view-tabs .tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.portfolio-view-tabs .tab-btn.active {
+  background: var(--accent-blue);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
 /* ═══════════════ SUGGESTION BADGES ═══════════════ */
 .suggestion-badge {
   display: inline-block;

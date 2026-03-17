@@ -198,6 +198,13 @@
       </div>
 
       <!-- Portfolio Summary Cards -->
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-bottom: 12px;">
+        <span id="mep-reference" style="font-size: 0.85rem; color: var(--text-secondary);"></span>
+        <div class="portfolio-view-tabs" id="currency-toggle">
+          <button class="tab-btn active" data-currency="ARS">ARS</button>
+          <button class="tab-btn" data-currency="USD">USD MEP</button>
+        </div>
+      </div>
       <div class="portfolio-summary" id="portfolio-summary">
         <div class="summary-card">
           <span class="summary-label">Valor Total</span>
@@ -231,7 +238,14 @@
           </div>
         </div>
         <div class="card" id="card-holdings-table">
-          <div class="card-header"><h2>Mis Activos</h2></div>
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <h2>Mis Activos</h2>
+            <div class="portfolio-view-tabs" id="portfolio-tabs">
+              <button class="tab-btn active" data-filter="ALL">Total</button>
+              <button class="tab-btn" data-filter="CEDEAR">CEDEARs</button>
+              <button class="tab-btn" data-filter="FCI">FCIs</button>
+            </div>
+          </div>
           <div class="card-body">
             <div class="table-wrapper">
               <table class="holdings-table" id="holdings-table">
@@ -241,6 +255,7 @@
                     <th data-sort="shares" class="sortable">Cantidad<span class="sort-icon"></span></th>
                     <th data-sort="avgPrice" class="sortable">P. Compra (ARS)<span class="sort-icon"></span></th>
                     <th data-sort="pctChange" class="sortable">Var. %<span class="sort-icon"></span></th>
+                    <th data-sort="dailyPnl" class="sortable">Var. Diaria<span class="sort-icon"></span></th>
                     <th data-sort="currentPrice" class="sortable">P. Actual (ARS)<span class="sort-icon"></span></th>
                     <th data-sort="value" class="sortable">Valor<span class="sort-icon"></span></th>
                     <th data-sort="pnl" class="sortable">P&L<span class="sort-icon"></span></th>
@@ -266,10 +281,19 @@
             <button class="modal-close" id="modal-close">&times;</button>
           </div>
           <form id="form-add-holding">
-            <div class="form-group">
-              <label for="input-ticker">Ticker</label>
-              <input type="text" id="input-ticker" placeholder="Ej: GGAL, AAPL, YPF..." required autocomplete="off">
-              <div class="search-results" id="ticker-search-results"></div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="input-type">Tipo de Activo</label>
+                <select id="input-type" class="form-select" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+                  <option value="CEDEAR" selected>CEDEAR / Acción</option>
+                  <option value="FCI">Fondo Común de Inversión (FCI)</option>
+                </select>
+              </div>
+              <div class="form-group" id="group-ticker">
+                <label for="input-ticker">Ticker / Fondo</label>
+                <input type="text" id="input-ticker" placeholder="Ej: GGAL, AAPL, YPF..." required autocomplete="off">
+                <div class="search-results" id="ticker-search-results"></div>
+              </div>
             </div>
             <div class="form-row">
               <div class="form-group">

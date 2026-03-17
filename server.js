@@ -34,7 +34,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'investai-super-secret-key-9988'; /
 // Login endpoint
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
-  if (AUTH_USER && AUTH_PASS && username === AUTH_USER && password === AUTH_PASS) {
+  if (AUTH_USER && AUTH_PASS && username.trim().toLowerCase() === AUTH_USER.trim().toLowerCase() && password === AUTH_PASS) {
     const token = jwt.sign({ user: username }, JWT_SECRET, { expiresIn: '7d' });
     res.cookie('invest_token', token, {
       httpOnly: true,
@@ -60,7 +60,7 @@ if (AUTH_USER && AUTH_PASS) {
     if (req.path === '/login.html' || req.path === '/js/login.js' || req.path.startsWith('/css/')) {
       return next();
     }
-    
+
     const token = req.cookies.invest_token;
     if (!token) {
       // Si pide HTML, redirigir. Si pide API, devolver 401
@@ -72,7 +72,7 @@ if (AUTH_USER && AUTH_PASS) {
 
     try {
       req.user = jwt.verify(token, JWT_SECRET);
-      
+
       // Si ya está logueado y pide la raíz pero el login no redirigió bien, continúa.
       next();
     } catch (err) {
@@ -166,7 +166,7 @@ function buildAnalysisPrompt(news, indices, portfolio, portfolioEnriched, riskPr
         if (metric.epsBasicExclExtraItemsTTM) str += ` EPS: ${metric.epsBasicExclExtraItemsTTM.toFixed(2)}.`;
         if (metric['52WeekHigh']) str += ` Max 52-wk: $${metric['52WeekHigh']}.`;
         if (metric['52WeekLow']) str += ` Min 52-wk: $${metric['52WeekLow']}.`;
-        
+
         if (p.news && p.news.length > 0) {
           str += `\n  Noticias recientes de ${p.ticker}: ` + p.news.map(n => `[${n.headline}]`).join(' | ');
         }
@@ -340,7 +340,7 @@ app.post('/api/market-analysis', async (req, res) => {
     if (portfolio && portfolio.length > 0) {
       // Limit to 10 tickers to avoid Finnhub rate limits on free tier
       const uniqueTickers = [...new Set(portfolio.map(p => p.ticker))].slice(0, 10);
-      
+
       const enrichmentPromises = uniqueTickers.map(async (ticker) => {
         const [metric, news] = await Promise.all([
           getBasicFinancials(ticker).catch(() => ({})),
@@ -358,7 +358,7 @@ app.post('/api/market-analysis', async (req, res) => {
 
     if (aiProvider === 'consensus') {
       const basicPrompt = buildAnalysisPrompt(news, indices, portfolio, portfolioEnriched, riskProfile) + "\n\nPor favor, provee tu análisis general del mercado y recomendaciones (no necesitas formato JSON).";
-      
+
       console.log('--- Iniciando Consenso de IAs (Gemini + OpenAI) ---');
       const [geminiRes, openaiRes] = await Promise.all([
         genAI.getGenerativeModel({ model: 'gemini-3.1-pro-preview' }).generateContent(basicPrompt).then(r => r.response.text()).catch(e => 'Error Gemini: ' + e),
@@ -511,14 +511,85 @@ app.get('/api/cedears', async (req, res) => {
   try {
     const response = await fetch('https://data912.com/live/arg_cedears');
     if (!response.ok) {
-        console.error(`Data912 returned ${response.status}`);
-        return res.status(response.status).json({ error: 'Source error' });
+      console.error(`Data912 returned ${response.status}`);
+      return res.status(response.status).json({ error: 'Source error' });
     }
     const data = await response.json();
     res.json(data);
   } catch (err) {
     console.error('Error fetching data912:', err.message);
     res.status(500).json({ error: 'Connection failed to price source' });
+  }
+});
+
+let mepCache = { data: 0, timestamp: 0 };
+const MEP_CACHE_TTL = 30 * 1000; // 30 seconds
+
+// Get real-time Dolar MEP from AL30 (data912)
+app.get('/api/mep', async (req, res) => {
+  try {
+    if (mepCache.data && Date.now() - mepCache.timestamp < MEP_CACHE_TTL) {
+      return res.json({ mep: mepCache.data });
+    }
+    const response = await fetch('https://data912.com/live/mep');
+    if (!response.ok) throw new Error('Source error');
+    const data = await response.json();
+    const al30 = data.find(x => x.ticker === 'AL30');
+    if (al30 && al30.mark) {
+      mepCache = { data: al30.mark, timestamp: Date.now() };
+      res.json({ mep: al30.mark });
+    } else {
+      res.json({ mep: mepCache.data || 1100 }); // fallback
+    }
+  } catch (err) {
+    res.json({ mep: mepCache.data || 1100 });
+  }
+});
+
+let fcisCache = { data: null, timestamp: 0 };
+const FCIS_CACHE_TTL = 30 * 60 * 1000; // 30 mins
+
+app.get('/api/fcis', async (req, res) => {
+  try {
+    if (fcisCache.data && Date.now() - fcisCache.timestamp < FCIS_CACHE_TTL) {
+      return res.json(fcisCache.data);
+    }
+    const categories = ['mercadoDinero', 'rentaFija', 'rentaVariable', 'rentaMixta', 'retornoTotal'];
+    
+    // Fetch both latest and second-to-last prices in parallel for all categories
+    const fetchLast = categories.map(cat => 
+      fetch(`https://api.argentinadatos.com/v1/finanzas/fci/${cat}/ultimo`).then(r => r.ok ? r.json() : []).catch(() => [])
+    );
+    const fetchPrev = categories.map(cat => 
+      fetch(`https://api.argentinadatos.com/v1/finanzas/fci/${cat}/penultimo`).then(r => r.ok ? r.json() : []).catch(() => [])
+    );
+
+    const [lastResults, prevResults] = await Promise.all([
+      Promise.all(fetchLast),
+      Promise.all(fetchPrev)
+    ]);
+
+    const lastFcis = lastResults.flat();
+    const prevFcis = prevResults.flat();
+
+    // Map and calculate 1-day variation
+    const enrichedFcis = lastFcis.map(curr => {
+      const prev = prevFcis.find(p => p.fondo === curr.fondo);
+      let pctChange = 0;
+      if (prev && prev.vcp > 0) {
+        pctChange = ((curr.vcp / prev.vcp) - 1) * 100;
+      }
+      return { ...curr, pctChange };
+    });
+
+    // Sort alphabetically by fondo
+    enrichedFcis.sort((a, b) => a.fondo.localeCompare(b.fondo));
+
+    fcisCache = { data: enrichedFcis, timestamp: Date.now() };
+    res.json(enrichedFcis);
+  } catch (err) {
+    console.error('Error fetching FCIs:', err.message);
+    res.status(500).json({ error: 'Failed to fetch FCI data' });
   }
 });
 
